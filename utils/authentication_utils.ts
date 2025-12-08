@@ -5,7 +5,7 @@ const refreshSecret: Secret = process.env.JWT_REFRESH_SECRET || "dsadasdas";
 
 export const createAccessToken = (user: any): string => {
   const payload: JwtPayload = { id: user.id, email: user.email };
-  return jwt.sign(payload, secret, { expiresIn: "15m" });
+  return jwt.sign(payload, secret, { expiresIn: "10s" });
 };
 
 export const createRefreshToken = (user: any): string => {
@@ -14,10 +14,10 @@ export const createRefreshToken = (user: any): string => {
   return jwt.sign(payload, refreshSecret, { expiresIn: "7d" });
 };
 
-export const validateAccessToken = (token: string) => {
-  return jwt.verify(token, secret);
+export const validateAccessToken = (token: string): JwtPayload => {
+  return jwt.verify(token, secret) as JwtPayload;
 };
 
-export const validateRefreshToken = (token: string) => {
-  return jwt.verify(token, refreshSecret);
+export const validateRefreshToken = (token: string): JwtPayload => {
+  return jwt.verify(token, refreshSecret) as JwtPayload;
 };

@@ -1,4 +1,4 @@
-import { Client, type QueryResult } from "pg";
+import { Client, type QueryResult,type QueryResultRow } from "pg";
 
 const client = new Client({
   user: process.env.PG_USER,
@@ -8,7 +8,7 @@ const client = new Client({
   database: process.env.PG_DATABASE,
 });
 
-export const connectDB = async () => {
+export const connectDB = async <T = any> () => {
   try {
     await client.connect();
     console.log("Postgre SQL successfully connected");
@@ -17,17 +17,17 @@ export const connectDB = async () => {
   }
 };
 
-export const query = async (
+export const query = async <T extends QueryResultRow = any>(
   text: string,
-  params? : any[]
-): Promise<QueryResult<any>> => {
+  params?: any[]
+): Promise<QueryResult<T>> => {
   try {
-    return await client.query(text, params);
-  } catch(err) {
-    console.error("Error executing query: ", err );
+    return await client.query<T>(text, params);
+  } catch (err) {
+    console.error("Error executing query: ", err);
     throw err;
   }
-}
+};
 
 export const disconnectDB = async () => {
   await client.end();

@@ -33,7 +33,7 @@ const connectToDataBaseAndCreateTable = async () => {
 app.use(express.json());
 
 // ------------ ROUTES ------------
-app.use("/auth", authRouter);
+app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/movie", authMiddleware, movieRouter);
 app.use("/api/v1/search", authMiddleware, searchRouter);
 

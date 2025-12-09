@@ -3,10 +3,12 @@ import { type Request, type Response } from "express";
 import {
   createAccessToken,
   createRefreshToken,
+  validateRefreshToken,
 } from "../utils/authentication_utils";
 import { passwordChecker, passwordHasher } from "../utils/password_hashing";
 import type { ReqBody } from "../types/req_body";
 import type { User, UserLogin } from "../types/user";
+import jwt from "jsonwebtoken";
 
 export async function signUp(req: Request, res: Response) {
   try {
@@ -172,3 +174,71 @@ export async function authCheck(req: Request, res: Response) {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 }
+
+// frontend calls this when token expires
+export const refreshTokenController = async (req: Request, res: Response) => {
+  try {
+    const refreshToken = req.cookies.refresh_token;
+
+    if (!refreshToken) {
+      return res
+        .status(401)
+        .json({ success: false, message: "No refresh token" });
+    }
+
+    const tokenRow = (
+      await query("SELECT * FROM user_tokens WHERE refresh_token = $1", [
+        refreshToken,
+      ])
+    ).rows[0];
+
+    if (!tokenRow) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Invalid refresh token" });
+    }
+
+    if (tokenRow.expires_at && tokenRow.expires_at < Date.now()) {
+      return res.status(403).json({
+        success: false,
+        message: "Refresh token expired",
+      });
+    }
+
+    const decoded = validateRefreshToken(refreshToken);
+    const newAccessToken = createAccessToken({
+      id: decoded.id,
+      email: decoded.email,
+    });
+    const newRefreshToken = createRefreshToken({
+      id: decoded.id,
+      email: decoded.email,
+    });
+
+    await query(
+      `UPDATE user_tokens SET refresh_token = $1, expires_at = $2 WHERE user_id = $3`,
+      [
+        newRefreshToken,
+        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        decoded.id,
+      ]
+    );
+
+    res
+      .cookie("access_token", newAccessToken, {
+        httpOnly: true,
+        maxAge: 15 * 60 * 1000,
+      })
+      .cookie("refresh_token", newRefreshToken, {
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      })
+      .status(200)
+      .json({ success: true, access_token: newAccessToken });
+  } catch (err) {
+    console.error("Refresh error:", err);
+    return res
+      .status(403)
+      .json({ success: false, message: "Invalid refresh token" });
+  }
+};

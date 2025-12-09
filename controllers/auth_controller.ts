@@ -47,10 +47,10 @@ export async function signUp(req: Request, res: Response) {
     const accessToken: string = createAccessToken(newUser);
     const refreshToken: string = createRefreshToken(newUser);
 
-    await query("UPDATE users SET refresh_token = $1 WHERE id = $2", [
-      refreshToken,
-      newUser.id,
-    ]);
+    await query(
+      "INSERT INTO user_tokens (user_id, refresh_token, expires_at) VALUES ($1, $2, $3)",
+      [newUser.id, refreshToken, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)]
+    );
 
     res
       .cookie("access_token", accessToken, {
@@ -112,10 +112,10 @@ export const signIn = async (req: Request, res: Response) => {
     const accessToken: string = createAccessToken(user);
     const refreshToken: string = createRefreshToken(user);
 
-    await query("UPDATE users SET refresh_token = $1 WHERE id = $2", [
-      refreshToken,
-      user.id,
-    ]);
+    await query(
+      "UPDATE user_tokens SET refresh_token = $1, expires_at = $2 WHERE user_id = $3",
+      [refreshToken, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), user.id]
+    );
 
     res
       .cookie("access_token", accessToken, {
@@ -146,7 +146,7 @@ export const logOut = async (req: Request, res: Response) => {
     }
 
     const result = await query(
-      "UPDATE users SET refresh_token = NULL WHERE id = $1 RETURNING id",
+      "UPDATE user_tokens SET refresh_token = NULL, expires_at = NULL WHERE user_id = $1 RETURNING user_id",
       [userId]
     );
     if (result.rows.length === 0) {

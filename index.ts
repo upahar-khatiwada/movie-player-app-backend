@@ -16,12 +16,17 @@ const connectToDataBaseAndCreateTable = async () => {
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    refresh_token VARCHAR(255),
     search_history JSONB DEFAULT '[]'
   );`
   );
 
-  // console.log("res object: ", res);
+  await query(`CREATE TABLE IF NOT EXISTS user_tokens (
+  id SERIAL PRIMARY KEY,
+  user_id INT REFERENCES users(id) ON DELETE CASCADE,
+  refresh_token VARCHAR(500),
+  expires_at TIMESTAMPTZ
+);
+`);
 };
 
 // ------------ MIDDLEWARES ------------

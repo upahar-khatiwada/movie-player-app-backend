@@ -2,6 +2,7 @@ import express from "express";
 import { connectDB, query } from "./config/db";
 import authRouter from "./routes/auth_route";
 import movieRouter from "./routes/movie_route";
+import searchRoutes from "./routes/search_route";
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use(express.json());
 // ------------ ROUTES ------------
 app.use("/auth", authRouter);
 app.use("/api/v1/movie", movieRouter);
+app.use("/api/v1/search", searchRoutes);
 
 app.listen(PORT, async () => {
   await connectToDataBaseAndCreateTable();

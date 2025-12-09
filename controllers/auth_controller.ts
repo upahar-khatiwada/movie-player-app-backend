@@ -6,7 +6,7 @@ import {
 } from "../utils/authentication_utils";
 import { passwordChecker, passwordHasher } from "../utils/password_hashing";
 import type { ReqBody } from "../types/req_body";
-import type { User, UserLogin } from "../types/User";
+import type { User, UserLogin } from "../types/user";
 
 export async function signUp(req: Request, res: Response) {
   try {
@@ -25,9 +25,9 @@ export async function signUp(req: Request, res: Response) {
       });
     }
 
-    const existingUser: User = (await query("SELECT * FROM users WHERE email = $1", [
-      email,
-    ])).rows[0];
+    const existingUser: User = (
+      await query("SELECT * FROM users WHERE email = $1", [email])
+    ).rows[0];
 
     if (existingUser) {
       return res
@@ -98,7 +98,10 @@ export const signIn = async (req: Request, res: Response) => {
         .json({ success: false, message: "Invalid email or password" });
     }
 
-    const isPasswordMatch: boolean = await passwordChecker(password, user.password);
+    const isPasswordMatch: boolean = await passwordChecker(
+      password,
+      user.password
+    );
 
     if (!isPasswordMatch) {
       return res

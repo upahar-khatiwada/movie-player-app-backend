@@ -1,6 +1,6 @@
 import type { JwtPayload } from "jsonwebtoken";
 import { query } from "../config/db";
-import type { User } from "../types/User";
+import type { User } from "../types/user";
 import { validateAccessToken } from "../utils/authentication_utils";
 import { type NextFunction, type Request, type Response } from "express";
 
@@ -33,10 +33,13 @@ export const authMiddleware = async (
         .json({ success: false, message: "Unauthorized - Invalid Token" });
     }
 
-    if(decoded_payload.exp < Date.now()) {
+    if (decoded_payload.exp < Date.now()) {
       return res
         .status(401)
-        .json({ success: false, message: "Unauthorized - Your Token has expired!" });
+        .json({
+          success: false,
+          message: "Unauthorized - Your Token has expired!",
+        });
     }
 
     const user: User = (

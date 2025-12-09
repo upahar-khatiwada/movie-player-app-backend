@@ -33,13 +33,14 @@ export const authMiddleware = async (
         .json({ success: false, message: "Unauthorized - Invalid Token" });
     }
 
-    if (decoded_payload.exp < Date.now()) {
-      return res
-        .status(401)
-        .json({
-          success: false,
-          message: "Unauthorized - Your Token has expired!",
-        });
+    if (decoded_payload.exp < Math.floor(Date.now() / 1000)) {
+      const date = new Date(decoded_payload.exp * 1000);
+      console.log(date.toString());
+
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized - Your Token has expired!",
+      });
     }
 
     const user: User = (
